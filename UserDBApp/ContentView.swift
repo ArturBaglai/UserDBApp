@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  UserDBApp
-//
-//  Created by Artur on 02.04.2025.
-//
-
 import SwiftUI
 
 struct ContentView: View {
