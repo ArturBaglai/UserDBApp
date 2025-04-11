@@ -4,7 +4,7 @@ import SwiftUI
 struct UserDBAppApp: App {
     var body: some Scene {
         WindowGroup {
-            
+
         }
     }
 }
