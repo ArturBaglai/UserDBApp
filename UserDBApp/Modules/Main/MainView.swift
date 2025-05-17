@@ -2,8 +2,8 @@ import SwiftUI
 
 struct MainView: View {
     
-    @State private var isLoading: Bool = false            // начальная загрузка
-    @State private var loadMoreInProgress: Bool = false   // подгрузка следующей страницы
+    @State private var isLoading: Bool = false
+    @State private var loadMoreInProgress: Bool = false   
     @State private var errorMessage: String? = nil
     @EnvironmentObject private var mainViewModel: MainViewModel
 
