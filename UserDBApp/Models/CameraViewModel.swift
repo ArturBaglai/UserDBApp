@@ -1,16 +1,13 @@
 import SwiftUI
 import AVFoundation
 
-import SwiftUI
-import AVFoundation
-
 class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate {
     
     @Published var capturedImage: CapturedImage? = nil
 
     private let session = AVCaptureSession()
     private let output = AVCapturePhotoOutput()
-    private let previewLayer = AVCaptureVideoPreviewLayer() 
+    private let previewLayer = AVCaptureVideoPreviewLayer()
 
     private var cameraDevice: AVCaptureDevice?
 
