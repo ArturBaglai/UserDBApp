@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+
 extension UserServiсe {
     enum Endpoint: String {
         case users = "/users"
@@ -71,35 +72,29 @@ public class UserServiсe: ObservableObject {
     func newUser(
         from endpoint: String,
         user: User,
+        photoData: Data,
         token: String
     ) async throws -> NewUserSuccessResponse {
         return try await withCheckedThrowingContinuation { continuation in
             var multipart = MultipartRequest()
-            for (key, value) in [
-                "accept": "application/json",
-                "Token": token,
-                "Content-Type": "multipart/form-data",
-                "name": user.name,
-                "email": user.email,
-                "phone": user.phone
-            ] {
-                multipart.add(key: key, value: value)
-            }
+            
+            multipart.add(key: "name", value: user.name)
+            multipart.add(key: "email", value: user.email)
+            multipart.add(key: "phone", value: user.phone)
             multipart.add(key: "position_id", value: user.positionId)
 
-            if let fileName = user.photoUrl,
-               let fileURL = URL(string: "file://\(fileName)"),
-               let fileData = try? Data(contentsOf: fileURL)
-            {
+            if !photoData.isEmpty {
                 multipart.add(
                     key: "photo",
-                    fileName: fileName,
+                    fileName: "photo.jpg",
                     fileMimeType: "image/jpeg",
-                    fileData: fileData
+                    fileData: photoData
                 )
             }
-
-            let url = URL(string: "\(baseURL)/users")!
+            guard let url = URL(string: "\(baseURL)/users") else {
+                continuation.resume(throwing: APIError.unexpectedError(code: 0, message: "Invalid URL"))
+                return
+            }
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue(multipart.httpContentTypeHeaderValue, forHTTPHeaderField: "Content-Type")
@@ -127,8 +122,10 @@ public class UserServiсe: ObservableObject {
                   do {
                       let userResponse = try JSONDecoder().decode(NewUserSuccessResponse.self, from: data)
                       continuation.resume(returning: userResponse)
+                      print(httpResponse.statusCode)
                   } catch {
                       continuation.resume(throwing: APIError.decodingError(error))
+                      print(httpResponse.statusCode)
                   }
                 case 401:
                   continuation.resume(throwing: APIError.expiredToken)
