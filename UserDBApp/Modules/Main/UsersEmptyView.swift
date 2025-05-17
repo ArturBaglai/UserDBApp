@@ -21,6 +21,3 @@ struct UsersEmptyView: View {
         }
     }
 }
-#Preview {
-    UsersEmptyView()
-}
