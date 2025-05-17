@@ -41,9 +41,10 @@ class PhotoUploadViewModel: ObservableObject {
                 if let image = UIImage(data: data) {
                     let maxSizeInBytes = 5 * 1024 * 1024
                     if data.count > maxSizeInBytes {
-                        registrationViewModel.validationErrors?["photo"] = ["Image size more than 5 MB."]
+                        registrationViewModel.validationErrors["photo"] = ["Image size more than 5 MB."]
                         return
                     }
+                    registrationViewModel.photoData = data
                     uploadedImage = image
                     let fileName = "photo_\(UUID().uuidString).jpeg"
                     imageFileName = fileName
