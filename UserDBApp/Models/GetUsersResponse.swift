@@ -15,8 +15,8 @@ struct GetUsersResponse: Codable {
         case totalUsers = "total_users"
         case count
         case page
-        case links 
-        case users 
+        case links
+        case users
     }
 }
 struct Links: Codable {
