@@ -21,6 +21,4 @@ public struct SignUpSuccessView: View {
     }
 }
 
-#Preview {
-    SignUpSuccessView()
-}
+
