@@ -1,96 +1,97 @@
-import Foundation
 import SwiftUI
-import PhotosUI
 
 @MainActor
 class RegistrationViewModel: ObservableObject {
+    
+    @EnvironmentObject var mainViewModel: MainViewModel
     @Published var name: String = ""
     @Published var email: String = ""
     @Published var phone: String = ""
     @Published var position: String = ""
     @Published var positionId: Int = 1
-    @Published var photo: Data = Data() 
-    @Published var validationErrors: [String: [String]]?
-    @Published var successRegistration: Bool = false
+    @Published var photoData: Data = Data()
+    @Published var validationErrors: [String: [String]] = [:]
+    @Published var successRegistration: Bool? = nil
     @Published var errorMessage: String?
-
+    @Published var didSubmit: Bool = false
+    @Published var registeredUser: User?
+    
+    var isFormCompletelyEmpty: Bool {
+        name.isEmpty &&
+        email.isEmpty &&
+        phone.isEmpty &&
+        photoData.isEmpty
+    }
+    
     private var registrationService: RegistrationService
+    let userInputViewModel: UserInputViewModel
 
-    init(registrationService: RegistrationService) {
+    init(registrationService: RegistrationService, userInputViewModel: UserInputViewModel) {
         self.registrationService = registrationService
+        self.userInputViewModel = userInputViewModel
     }
 
     func handleSignUp() async {
+        self.didSubmit = true
+        let isValid = userInputViewModel.validationFields()
+        self.validationErrors = userInputViewModel.validationErrors
+        
         let user = User(
             id: 0,
             name: name,
             email: email,
             phone: phone,
             position: position,
-            positionId: 1,
+            positionId: positionId,
             photoUrl: nil
         )
 
-        let request = RegistrationRequest(user: user)
+        let request = RegistrationRequest(user: user, photo: photoData)
         let result = await registrationService.register(request: request)
-
-        DispatchQueue.main.async {
-            switch result {
-            case .success(let userId):
-                self.successRegistration = true
-                print("Registration successful: User ID = \(userId)")
-            case .failure(let error):
-                self.errorMessage = "Registration failed: \(error.localizedDescription)"
-            }
-        }
-    }
-}
-
-struct TextFieldView: View {
-    let label: String
-    @Binding var text: String
-    @Binding var state: TextFieldState
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            TextField(label, text: $text)
-                .padding()
-                .overlay(RoundedRectangle(cornerRadius: 5)
-                    .stroke(strokeColor(), lineWidth: 1)
-                )
-                .onChange(of: text) { newValue, _ in
-                    if case .success = state {} else {
-                        state = .default
-                    }
-                    if case .focused = state {
-                        state = .focused
-                    }
-                }
-            if case .error(let message) = state {
-                Text(message)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-            }
-        }
-    }
-    
-private func strokeColor() -> Color {
-        switch state {
-        case .default:
-            return .gray
-        case .error:
-            return .red
+        
+        switch result {
         case .success:
-            return .gray
-        case .focused:
-            return .blue
+            mainViewModel.users.insert(user, at: 0)
+            self.successRegistration = true
+            
+        case .failure(let error):
+            self.successRegistration = false
+            
+            if let apiError = error as? APIError {
+                switch apiError {
+                case .phoneOrEmailExists:
+                    self.errorMessage = apiError.message
+                case .validationError(let response):
+                   if let fails = response.fails {
+                        self.validationErrors = fails
+                   } else {
+                       self.errorMessage = response.message
+                   }
+                case .noInthernetConnection:
+                    self.errorMessage = apiError.message
+                case .expiredToken:
+                    self.errorMessage = apiError.message
+                case .unexpectedError(code: let code, message: let message):
+                    self.errorMessage = apiError.message
+                case .noData:
+                    self.errorMessage = apiError.message
+                case .decodingError(_):
+                    self.errorMessage = apiError.message
+                }
+            } else {
+                self.errorMessage = error.localizedDescription
+            }
+            print(error)
         }
     }
-}
-
-enum TextFieldState {
-    case `default`
-    case success
-    case error(message: String)
-    case focused
+    func resetForm() {
+        name = ""
+        email = ""
+        phone = ""
+        positionId = 0
+        photoData = Data()
+        validationErrors = [:]
+        successRegistration = false
+        errorMessage = nil
+    }
 }
