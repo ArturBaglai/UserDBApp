@@ -31,6 +31,3 @@ struct NoInternetConnectionView: View {
         }
     }
 }
-#Preview {
-    NoInternetConnectionView()
-}
