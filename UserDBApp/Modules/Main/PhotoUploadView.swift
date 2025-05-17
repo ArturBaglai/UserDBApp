@@ -65,7 +65,6 @@ struct PhotoUploadView: View {
                 }
             }
             
-            // Ошибка
             if let photoError = registrationViewModel.validationErrors["photo"]?.first {
                 Text(photoError)
                     .font(.caption)
