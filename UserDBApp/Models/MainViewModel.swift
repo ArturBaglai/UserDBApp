@@ -35,12 +35,16 @@ class MainViewModel: ObservableObject {
         do {
             let response = try await userService.users(page: currentPage, count: 6)
 
-            self.users.append(contentsOf: response.users)
+            if currentPage == 1 {
+                self.users = response.users
+            } else {
+                self.users.append(contentsOf: response.users)
+            }
+
             self.nextPage = response.links.nextURL
             self.previousPage = response.links.prevURL
             self.isLoading = false
         } catch let error as UserServiсe.UserError {
-           
             switch error {
             case let .pageError(message):
                 self.errorMessage = message
@@ -59,6 +63,11 @@ class MainViewModel: ObservableObject {
     func loadMoreUsers() async {
         guard !isLoading, nextPage != nil || !users.isEmpty else { return }
         currentPage += 1
+        await loadUsers()
+    }
+    func reloadAllUsers() async {
+        currentPage = 1
+        users.removeAll()
         await loadUsers()
     }
 }
